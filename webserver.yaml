@@ -1,0 +1,43 @@
+---
+- name: Configure Webserver in Docker container
+  hosts: webserver
+  become: yes
+  remote_user: sumo
+  tasks:
+    - name: Pull the httpd image
+      docker_image:
+        name: httpd
+        tag: latest
+        source: pull
+    - name: Create directory
+      file:
+        path: /home/sumo/webserver 
+        state: directory
+    
+    # - name: Download web content 
+    #   get_url:
+    #     url: https://www.free-css.com/assets/files/free-css-templates/download/page290/digitf.zip
+    #     dest: /home/sumo/webserver
+      
+    - name: extract file
+      unarchive: 
+        src: https://www.free-css.com/assets/files/free-css-templates/download/page290/digitf.zip
+        dest: /home/sumo/webserver
+        remote_src: yes
+    - name: move files form directory
+      shell: "mv /home/sumo/webserver/digitf* /home/sumo/webserver "
+      
+
+    # - name: Create web source directory
+    #   copy:
+    #     dest: /home/sumo/webserver/index.html
+    #     content: "Hi !! Hello !! This is from webserver running inside the docker container !!!"
+
+    - name: setting the docker container
+      docker_container:
+        name: my-webserver
+        image: httpd
+        state: started
+        exposed_ports: 80
+        ports:  "8080:80"
+        volumes: /home/sumo/webserver:/usr/local/apache2/htdocs
